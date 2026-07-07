@@ -7,7 +7,9 @@ export const LAYOUT = {
   COLS: 6,
   seatX: col => (col - 2.5) * 0.85,
   seatZ: row => -2 - row * 1.1,
-  seatY: row => row * 0.42,           // 台阶抬高:真实影院 stadium 排差(2026-07-07 用户反馈两轮加大)
+  // 坡向:row 越大越靠近银幕(z 越小)= 前排 = 最低;row0 离银幕最远 = 最后排 = 最高
+  // (2026-07-07 用户纠正:此前坡向反了,靠银幕的排被垫最高)
+  seatY: row => (4 - row) * 0.42,
   SEAT_TOP: 0.48,                     // 座面顶离台阶高度
   HALL_W: 12, HALL_D: 16, HALL_H: 7,
   SCREEN_W: 8, SCREEN_H: 4.5, SCREEN_Y: 3.4, SCREEN_Z: -8.0,   // 银幕抬高:底边高于前排视线,阶梯厅不遮幕
@@ -81,14 +83,16 @@ export function buildHall(scene) {
   floor.position.z = -3;
   group.add(floor);
 
-  // 台阶(第 1 排起,每排一块)
-  for (let row = 1; row < L.ROWS; row++) {
-    const step = new THREE.Mesh(new THREE.BoxGeometry(L.HALL_W - 2.2, L.seatY(row), 1.14), matStep);
-    step.position.set(0, L.seatY(row) / 2, L.seatZ(row) + 0.02);
+  // 台阶(凡被垫高的排一块,前排贴地无台阶)
+  for (let row = 0; row < L.ROWS; row++) {
+    const h = L.seatY(row);
+    if (h <= 0) continue;
+    const step = new THREE.Mesh(new THREE.BoxGeometry(L.HALL_W - 2.2, h, 1.14), matStep);
+    step.position.set(0, h / 2, L.seatZ(row) + 0.02);
     group.add(step);
-    // 台阶前沿金属压条(过道微反光)
+    // 台阶前沿金属压条(过道微反光,朝银幕一侧)
     const trim = new THREE.Mesh(new THREE.BoxGeometry(L.HALL_W - 2.2, 0.02, 0.05), matTrim);
-    trim.position.set(0, L.seatY(row) + 0.01, L.seatZ(row) - 0.55);
+    trim.position.set(0, h + 0.01, L.seatZ(row) - 0.55);
     group.add(trim);
   }
 
