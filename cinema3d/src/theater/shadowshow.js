@@ -97,12 +97,18 @@ export class ShadowShow {
     if (this.phase === 'curtain') this.drawCurtain();
     else this.drawStory();
 
-    // 银幕内文字(下部,楷体逐字 —— 亮布上用浓墨字,皮影戏字幕气质)
+    // 银幕内文字(下部,楷体逐字):字幕亮带 + 浓墨字 —— 暗角里也可读
     if (this.phase === 'story' && this.lineText) {
+      const band = x.createLinearGradient(0, H - 96, 0, H);
+      band.addColorStop(0, 'rgba(232,220,188,0)');
+      band.addColorStop(0.45, 'rgba(232,220,188,.5)');
+      band.addColorStop(1, 'rgba(232,220,188,.28)');
+      x.fillStyle = band;
+      x.fillRect(0, H - 96, W, 96);
       x.font = '700 36px "KaiTi","STKaiti","楷体",serif';
       x.textAlign = 'center'; x.textBaseline = 'middle';
-      x.shadowColor = 'rgba(226,214,182,.55)'; x.shadowBlur = 6;
-      x.fillStyle = '#241c10';
+      x.shadowColor = 'rgba(240,230,200,.6)'; x.shadowBlur = 5;
+      x.fillStyle = '#1c1409';
       x.fillText(this.lineText.slice(0, this.shownChars), W / 2, H - 44);
       x.shadowBlur = 0;
     }

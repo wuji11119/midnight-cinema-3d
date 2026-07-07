@@ -13,6 +13,8 @@ uniform float uOpacity;    // 淡入淡出
 uniform float uTime;
 uniform float uFlick;      // 闪帧脉冲(0 常态)
 uniform float uBoost;      // 亮度倍率
+uniform float uMaskHi;     // 羽化外沿(皮影布模式放宽到基本无羽化)
+uniform float uMaskLo;     // 羽化内沿
 varying vec2 vUv;
 
 float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453); }
@@ -29,9 +31,9 @@ void main(){
   // 闪帧:亮暗阶跃
   col *= 1.0 + uFlick * (step(0.5, fract(uTime*14.0)) * 2.2 - 0.8);
 
-  // 椭圆羽化融入暗场(spec:不出现硬边框)
+  // 椭圆羽化融入暗场(spec:不出现硬边框);皮影布模式下放宽为近满幅
   float d = length((vUv - 0.5) * vec2(2.15, 2.35));
-  float mask = smoothstep(1.05, 0.55, d);
+  float mask = smoothstep(uMaskHi, uMaskLo, d);
 
   // 放映底光:即使画面全黑,银幕仍像被灯泡透着(发光体感)
   col = col * uBoost + vec3(0.045, 0.05, 0.048);
@@ -65,6 +67,8 @@ export class Screen {
       uTime: { value: 0 },
       uFlick: { value: 0 },
       uBoost: { value: 1.0 },
+      uMaskHi: { value: 1.05 },
+      uMaskLo: { value: 0.55 },
     };
     this.mesh.material.dispose();
     this.mesh.material = new THREE.ShaderMaterial({
@@ -99,6 +103,8 @@ export class Screen {
           tex.colorSpace = THREE.SRGBColorSpace;
           this.uniforms.map.value = tex;
           this.uniforms.uBoost.value = boost;
+          this.uniforms.uMaskHi.value = 1.05;   // 投影模式:恢复羽化
+          this.uniforms.uMaskLo.value = 0.55;
           this._sampleAvg(tex);
           this._fadeTo(0.96, fade);
           this.flick();
@@ -154,6 +160,8 @@ export class Screen {
     this._shadow = show;
     this.uniforms.map.value = show.texture;
     this.uniforms.uBoost.value = 1.0;
+    this.uniforms.uMaskHi.value = 1.65;   // 皮影布模式:近满幅,底部文字不被羽化吃掉
+    this.uniforms.uMaskLo.value = 1.30;
     this.avgColor.set(0xb0a184);   // 暖纸色:皮影布透光,全厅随之泛暖
     this._fadeTo(0.95, 1.2);
   }
