@@ -8,11 +8,12 @@ const L = LAYOUT;
 
 export const SHOTS = {
   // 上帝视角(常驻基准机位):银幕与全场同框,只做呼吸式极缓漂移,永不轮换
+  // 机位随影院阶梯化(排差 0.42/银幕抬高)上调,保证银幕全幅 + 阶梯观众全览
   godView: () => ({
     dur: Infinity,
     at(k, pos, look, t = 0) {
-      pos.set(Math.sin(t * 0.11) * 0.55, 6.5 + Math.sin(t * 0.07) * 0.15, 4.0);
-      look.set(0, 1.7, -5.4);
+      pos.set(Math.sin(t * 0.11) * 0.55, 8.0 + Math.sin(t * 0.07) * 0.15, 4.8);
+      look.set(0, 2.35, -5.6);
     },
   }),
 
@@ -60,32 +61,33 @@ export const SHOTS = {
     dur: 8,
     at(k, pos, look) {
       const e = ease(k);
-      pos.set((e - 0.5) * 1.6, 5.7, 1.8 - e * 1.2);
-      look.set(0, 0.9, -4.5);
+      pos.set((e - 0.5) * 1.6, 7.2, 2.2 - e * 1.2);
+      look.set(0, 1.5, -4.5);
     },
   }),
 
-  // 回看全场:从银幕的位置审视观众(点名 / 规则宣布)
+  // 回看全场:从银幕的位置审视观众(点名 / 规则宣布)—— 阶梯厅从银幕上方俯扫
   houseFront: () => ({
     dur: 8,
     at(k, pos, look) {
       const e = ease(k);
-      pos.set((0.5 - e) * 2.4, 2.5, L.SCREEN_Z + 1.6);
-      look.set(0, 1.05, -4.0);
+      pos.set((0.5 - e) * 2.4, 3.6, L.SCREEN_Z + 1.6);
+      look.set(0, 1.6, -3.6);
     },
   }),
 
-  // 死亡近景:急切到席位(dur 短,由 acts 指定席位)
+  // 死亡近景:侧高位斜切席位(过道方向进入,避免被前后椅背糊脸)
   seatClose: ({ seatPos }) => ({
     dur: 3.2,
     at(k, pos, look) {
       const e = ease(Math.min(k * 1.6, 1));
+      const side = seatPos.x > 0 ? -1 : 1;   // 从过道一侧看进来
       pos.set(
-        seatPos.x + (seatPos.x > 0 ? -1 : 1) * (1.5 - e * 0.35),
-        seatPos.y + 0.75,
-        seatPos.z + 1.35 - e * 0.3
+        seatPos.x + side * (1.9 - e * 0.4),
+        seatPos.y + 1.25,
+        seatPos.z + 0.75 - e * 0.25
       );
-      look.set(seatPos.x, seatPos.y + 0.45, seatPos.z);
+      look.set(seatPos.x, seatPos.y + 0.5, seatPos.z);
     },
   }),
 };

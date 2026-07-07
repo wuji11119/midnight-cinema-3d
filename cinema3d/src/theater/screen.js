@@ -86,7 +86,7 @@ export class Screen {
       new THREE.PlaneGeometry(7.2, 7.2 * 320 / 1024),
       new THREE.MeshBasicMaterial({ map: this._txtTex, transparent: true, opacity: 0, depthWrite: false })
     );
-    this._txtMesh.position.set(0, LAYOUT.SCREEN_Y - 0.45, LAYOUT.SCREEN_Z + 0.06);   // 排差加大后上移,免被后排头顶遮挡
+    this._txtMesh.position.set(0, LAYOUT.SCREEN_Y - 0.1, LAYOUT.SCREEN_Z + 0.06);   // 血字置银幕中带,高于后排头顶视线
     scene.add(this._txtMesh);
   }
 

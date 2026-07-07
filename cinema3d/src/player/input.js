@@ -54,8 +54,8 @@ export class Input {
     return new Promise(res => {
       const cam = this.camera;
       this.director.enabled = false;
-      cam.position.set(0, 7.4, 0.9);
-      cam.lookAt(0, 0.4, -4.4);
+      cam.position.set(0, 8.4, 1.4);
+      cam.lookAt(0, 0.8, -4.4);
       cam.fov = 46;
       cam.updateProjectionMatrix();
 
