@@ -86,7 +86,7 @@ export class Screen {
       new THREE.PlaneGeometry(7.2, 7.2 * 320 / 1024),
       new THREE.MeshBasicMaterial({ map: this._txtTex, transparent: true, opacity: 0, depthWrite: false })
     );
-    this._txtMesh.position.set(0, LAYOUT.SCREEN_Y - 0.95, LAYOUT.SCREEN_Z + 0.06);
+    this._txtMesh.position.set(0, LAYOUT.SCREEN_Y - 0.45, LAYOUT.SCREEN_Z + 0.06);   // 排差加大后上移,免被后排头顶遮挡
     scene.add(this._txtMesh);
   }
 
@@ -154,7 +154,7 @@ export class Screen {
     this._shadow = show;
     this.uniforms.map.value = show.texture;
     this.uniforms.uBoost.value = 1.0;
-    this.avgColor.set(0x74807c);
+    this.avgColor.set(0xb0a184);   // 暖纸色:皮影布透光,全厅随之泛暖
     this._fadeTo(0.95, 1.2);
   }
   stopShadow() { this._shadow = null; }

@@ -70,13 +70,23 @@ export class ShadowShow {
 
   draw() {
     const x = this.x;
-    // 纸底
+    // 亮布幕底(皮影戏 = 背光亮布 + 黑剪影;深底会"黑吃黑",实测踩坑)
     const g = x.createLinearGradient(0, 0, 0, H);
-    g.addColorStop(0, '#101518'); g.addColorStop(0.6, '#0a0e10'); g.addColorStop(1, '#060809');
+    g.addColorStop(0, '#c4b696'); g.addColorStop(0.55, '#a89a7c'); g.addColorStop(1, '#7e7460');
     x.fillStyle = g;
     x.fillRect(0, 0, W, H);
-    // 纸纹噪点(低频)
+    // 放映灯中心热区 + 四角暗角(旧布被灯打透的感觉)
+    const hot = x.createRadialGradient(W / 2, H * 0.46, 80, W / 2, H * 0.46, W * 0.72);
+    hot.addColorStop(0, 'rgba(238,226,196,.5)');
+    hot.addColorStop(0.6, 'rgba(238,226,196,.10)');
+    hot.addColorStop(1, 'rgba(30,24,16,.26)');
+    x.fillStyle = hot;
+    x.fillRect(0, 0, W, H);
+    // 布纹横线 + 噪点
     x.globalAlpha = 0.05;
+    x.strokeStyle = '#5a5040';
+    for (let yy = 0; yy < H; yy += 7) { x.beginPath(); x.moveTo(0, yy); x.lineTo(W, yy); x.stroke(); }
+    x.globalAlpha = 0.06;
     for (let i = 0; i < 40; i++) {
       x.fillStyle = i % 2 ? '#fff' : '#000';
       x.fillRect((i * 137 + this.t * 20) % W, (i * 89) % H, 2, 2);
@@ -86,12 +96,12 @@ export class ShadowShow {
     if (this.phase === 'curtain') this.drawCurtain();
     else this.drawStory();
 
-    // 银幕内文字(下部,楷体逐字)
+    // 银幕内文字(下部,楷体逐字 —— 亮布上用浓墨字,皮影戏字幕气质)
     if (this.phase === 'story' && this.lineText) {
-      x.font = '600 34px "KaiTi","STKaiti","楷体",serif';
+      x.font = '700 36px "KaiTi","STKaiti","楷体",serif';
       x.textAlign = 'center'; x.textBaseline = 'middle';
-      x.shadowColor = 'rgba(0,0,0,.9)'; x.shadowBlur = 8;
-      x.fillStyle = PAPER;
+      x.shadowColor = 'rgba(226,214,182,.55)'; x.shadowBlur = 6;
+      x.fillStyle = '#241c10';
       x.fillText(this.lineText.slice(0, this.shownChars), W / 2, H - 44);
       x.shadowBlur = 0;
     }
@@ -160,25 +170,22 @@ export class ShadowShow {
       x.globalAlpha = sanAlpha;
       x.translate(0, this.fadeSan * 60);
 
-      // 月光窗柱
+      // 窗(黑框剪影 + 窗外飘雪的暗点)
       x.save();
-      x.globalAlpha = sanAlpha * (this.lampsOn <= 1 ? 0.12 : 0.06);
-      x.fillStyle = '#9fb6b2';
-      x.beginPath();
-      x.moveTo(800, 40); x.lineTo(930, 40); x.lineTo(860, floorY); x.lineTo(730, floorY);
-      x.closePath(); x.fill();
-      // 雪点
-      x.fillStyle = '#cfd8d0';
+      x.strokeStyle = INK; x.lineWidth = 7;
+      x.strokeRect(766, 60, 150, 190);
+      x.beginPath(); x.moveTo(841, 60); x.lineTo(841, 250); x.moveTo(766, 155); x.lineTo(916, 155); x.stroke();
       for (const s of this.snow) {
         const sy = (s.y + this.t * 0.03 * s.s) % 1;
-        x.globalAlpha = sanAlpha * 0.25 * s.s;
-        x.fillRect(760 + s.x * 150 - sy * 60, 50 + sy * (floorY - 60), 2.2, 2.2);
+        x.globalAlpha = sanAlpha * 0.5 * s.s;
+        x.fillStyle = '#3a3226';
+        x.fillRect(772 + s.x * 138, 64 + sy * 180, 2.6, 2.6);
       }
       x.restore();
 
-      // 地板线
-      x.strokeStyle = 'rgba(216,205,182,.14)';
-      x.lineWidth = 2;
+      // 地板线(浓墨)
+      x.strokeStyle = 'rgba(36,28,16,.55)';
+      x.lineWidth = 3;
       x.beginPath(); x.moveTo(0, floorY); x.lineTo(W, floorY); x.stroke();
 
       // 吊灯 ×3
@@ -191,10 +198,17 @@ export class ShadowShow {
         x.moveTo(lx - 30, ly + 26); x.lineTo(lx + 30, ly + 26); x.lineTo(lx + 16, ly); x.lineTo(lx - 16, ly);
         x.closePath(); x.fill();
         if (i < this.lampsOn) {
-          const gl = x.createRadialGradient(lx, ly + 34, 4, lx, ly + 34, 90);
-          gl.addColorStop(0, 'rgba(216,196,150,.30)'); gl.addColorStop(1, 'rgba(216,196,150,0)');
+          const gl = x.createRadialGradient(lx, ly + 34, 4, lx, ly + 34, 95);
+          gl.addColorStop(0, 'rgba(255,244,208,.8)'); gl.addColorStop(1, 'rgba(255,244,208,0)');
           x.fillStyle = gl;
-          x.beginPath(); x.arc(lx, ly + 34, 90, 0, 7); x.fill();
+          x.beginPath(); x.arc(lx, ly + 34, 95, 0, 7); x.fill();
+        } else {
+          // 熄灭的灯:灯下拖一片暗影
+          x.save();
+          x.globalAlpha = 0.18;
+          x.fillStyle = INK;
+          x.beginPath(); x.arc(lx, ly + 40, 60, 0, 7); x.fill();
+          x.restore();
         }
       }
 
@@ -238,21 +252,21 @@ export class ShadowShow {
       x.restore();
     }
 
-    // 结尾:影院浮现(椅背剪影排 + 小银幕自指)
+    // 结尾:影院浮现(黑边小银幕自指 + 椅背观众剪影排)
     if (this.fadeSan > 0) {
       const x2 = this.x;
       x2.save();
       x2.globalAlpha = this.fadeSan;
-      x2.fillStyle = '#dfe6e0';
-      x2.globalAlpha = this.fadeSan * 0.85;
-      x2.fillRect(W / 2 - 190, 100, 380, 190);                 // 小银幕
-      x2.globalAlpha = this.fadeSan;
+      x2.fillStyle = INK;
+      x2.fillRect(W / 2 - 204, 88, 408, 214);                  // 小银幕黑框
+      x2.fillStyle = '#f2ecd8';
+      x2.fillRect(W / 2 - 190, 100, 380, 190);                 // 亮银幕
       x2.fillStyle = INK;
       for (let r = 0; r < 2; r++)
         for (let i = 0; i < 8; i++) {
-          const cx = 120 + i * 112 + r * 56, cy = 400 + r * 74;
-          x2.beginPath(); x2.arc(cx, cy - 24, 16, 0, 7); x2.fill();
-          x2.fillRect(cx - 34, cy - 10, 68, 52);
+          const cx = 120 + i * 112 + r * 56, cy = 408 + r * 78;
+          x2.beginPath(); x2.arc(cx, cy - 26, 17, 0, 7); x2.fill();
+          x2.fillRect(cx - 36, cy - 11, 72, 56);
         }
       x2.restore();
     }

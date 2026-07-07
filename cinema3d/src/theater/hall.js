@@ -7,7 +7,7 @@ export const LAYOUT = {
   COLS: 6,
   seatX: col => (col - 2.5) * 0.85,
   seatZ: row => -2 - row * 1.1,
-  seatY: row => row * 0.18,           // 台阶抬高
+  seatY: row => row * 0.30,           // 台阶抬高:真实影院式后排逐级增高(2026-07-07 用户反馈加大)
   SEAT_TOP: 0.48,                     // 座面顶离台阶高度
   HALL_W: 12, HALL_D: 16, HALL_H: 7,
   SCREEN_W: 8, SCREEN_H: 4.5, SCREEN_Y: 3.0, SCREEN_Z: -8.0,
