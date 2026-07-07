@@ -105,12 +105,15 @@ export class ShadowShow {
       band.addColorStop(1, 'rgba(232,220,188,.28)');
       x.fillStyle = band;
       x.fillRect(0, H - 96, W, 96);
-      x.font = '700 36px "KaiTi","STKaiti","楷体",serif';
+      // 米字 + 黑描边:亮带、黑布、暗角上均可读(三次字幕反馈后放弃赌底色)
+      x.font = '700 38px "KaiTi","STKaiti","楷体",serif';
       x.textAlign = 'center'; x.textBaseline = 'middle';
-      x.shadowColor = 'rgba(240,230,200,.6)'; x.shadowBlur = 5;
-      x.fillStyle = '#1c1409';
-      x.fillText(this.lineText.slice(0, this.shownChars), W / 2, H - 44);
-      x.shadowBlur = 0;
+      const shown = this.lineText.slice(0, this.shownChars);
+      x.lineWidth = 6; x.lineJoin = 'round';
+      x.strokeStyle = 'rgba(12,9,4,.92)';
+      x.strokeText(shown, W / 2, H - 44);
+      x.fillStyle = '#f0e6cc';
+      x.fillText(shown, W / 2, H - 44);
     }
   }
 
