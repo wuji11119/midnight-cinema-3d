@@ -41,6 +41,7 @@ async function playerDeathFX(ctx) {
 // 通用死亡序列:血光+方向尖啸+雾包裹+拽走;含玩家则玩家先走特殊演出
 export async function killSeq(ctx, victims, gap = 420) {
   const { lights, sfx, mist, director, house } = ctx;
+  ctx.screen.clearText();
   const player = victims.find(p => house.playerSeat != null && p.seatIdx === house.playerSeat);
   const others = victims.filter(p => p !== player);
   if (player) await playerDeathFX(ctx);
@@ -48,7 +49,7 @@ export async function killSeq(ctx, victims, gap = 420) {
     setTimeout(() => {
       if (!p.alive) return;
       const pos = p.group.position.clone();
-      if (i % 2 === 0) director.requestShot('seatClose', { seatPos: pos });
+      if (i === 0) director.requestShot('seatClose', { seatPos: pos });   // 每波死亡只切一次近景,看完自动回上帝视角
       lights.deathLight(pos);
       sfx.whooshAt(pos);
       mist.burst(pos).then(() => p.devour());
@@ -76,7 +77,9 @@ export const ACTS = {
     const { house, screen, director, sfx } = ctx;
     await screen.show(asset(act.proj));
     screen.flick();
-    await ui.cap(ruleText(act.rule, { color: run.target }), 'rule');
+    const ruleStr = ruleText(act.rule, { color: run.target });
+    screen.bloodText(ruleStr);
+    await ui.cap(ruleStr, 'rule');
     await sleep(900);
     director.requestShot('houseFront');
     house.alive().filter(p => p.color === run.target).forEach(p => p.setMark(true));
@@ -97,7 +100,9 @@ export const ACTS = {
   async hold(ctx, act, run) {
     const { house, screen, lights, sfx, input, mode } = ctx;
     await screen.show(asset(act.proj));
-    await ui.cap(ruleText(act.rule, {}), 'rule');
+    const ruleStr = ruleText(act.rule, {});
+    screen.bloodText(ruleStr);
+    await ui.cap(ruleStr, 'rule');
     lights.dim(0.5);
     sfx.rumble(true);
     const me = house.playerPuppet();
@@ -133,7 +138,9 @@ export const ACTS = {
   async dilemma(ctx, act, run) {
     const { house, screen, lights, sfx, mode, input } = ctx;
     await screen.show(asset(act.proj));
-    await ui.cap(ruleText(act.rule, {}), 'rule');
+    const ruleStr = ruleText(act.rule, {});
+    screen.bloodText(ruleStr);
+    await ui.cap(ruleStr, 'rule');
     lights.dim(0.45);
     const me = house.playerPuppet();
     const was = await forceIfInvolved(ctx, mode === 'play' && me?.alive);
@@ -177,7 +184,9 @@ export const ACTS = {
   async final(ctx, act, run) {
     const { house, screen, director, sfx } = ctx;
     await screen.show(asset(act.proj));
-    await ui.cap(ruleText(act.rule, {}), 'rule');
+    const ruleStr = ruleText(act.rule, {});
+    screen.bloodText(ruleStr);
+    await ui.cap(ruleStr, 'rule');
     await sleep(900);
     director.requestShot('screenPush');
     const me = house.playerPuppet();
@@ -196,7 +205,9 @@ export const ACTS = {
 async function splitCore(ctx, act, run, few) {
   const { house, screen, sfx, mode, director } = ctx;
   await screen.show(asset(act.proj));
-  await ui.cap(ruleText(act.rule, {}), 'rule');
+  const ruleStr = ruleText(act.rule, {});
+    screen.bloodText(ruleStr);
+    await ui.cap(ruleStr, 'rule');
   await sleep(800);
   const me = house.playerPuppet();
   const was = await forceIfInvolved(ctx, mode === 'play' && me?.alive);

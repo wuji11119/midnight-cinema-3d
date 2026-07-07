@@ -7,6 +7,15 @@ const ease = k => k * k * (3 - 2 * k);
 const L = LAYOUT;
 
 export const SHOTS = {
+  // 上帝视角(常驻基准机位):银幕与全场同框,只做呼吸式极缓漂移,永不轮换
+  godView: () => ({
+    dur: Infinity,
+    at(k, pos, look, t = 0) {
+      pos.set(Math.sin(t * 0.11) * 0.55, 6.5 + Math.sin(t * 0.07) * 0.15, 4.0);
+      look.set(0, 1.7, -5.4);
+    },
+  }),
+
   // 缓推银幕:悬念推进
   screenPush: () => ({
     dur: 9,
@@ -81,5 +90,7 @@ export const SHOTS = {
   }),
 };
 
-// AUTO 轮换序列(seatClose 不进轮换,只被点名)
-export const AUTO_ROTATION = ['screenPush', 'sweep', 'shoulder', 'houseFront', 'overhead'];
+// 镜头策略(2026-07-07 用户反馈定案):不做机位轮换 ——
+// godView 常驻;只在「主角行动(FORCED/FP)」与「他人死亡(seatClose)」时切换,
+// 插队镜头播完自动回 godView。旧轮换序列废弃保留镜头语言库供编排点名。
+export const HOME_SHOT = 'godView';

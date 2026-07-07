@@ -3,6 +3,7 @@
 import { FILMS, COLORS, CURTAINS, pick } from '../data/films.js';
 import { ACTS } from './acts.js';
 import { ui, sleep } from '../player/ui.js';
+import { ShadowShow } from '../theater/shadowshow.js';
 
 let runToken = 0;
 
@@ -36,18 +37,17 @@ export async function playFilm(ctx, filmId, { mode, playerSeat }) {
   ui.titleHide();
   await sleep(1200);
 
-  // 序章:开场旁白(含"幕布颜色"记忆考点 —— 血字标出)
-  await ui.cap(`幕布,是${run.curtain.label}的。记住它。`, 'rule');
-  await sleep(2000);
-  ui.capHide();
-  await sleep(600);
-  for (const s of film.story) {
+  // 序章:银幕皮影戏 —— 拉幕验色(幕布用本场真实颜色,记忆考点)+ 逐句剪影剧情
+  const shadow = new ShadowShow(film, run.curtain);
+  screen.startShadow(shadow);
+  await sleep(3400);                      // 拉幕 + 血字「记住它」
+  for (let si = 0; si < film.story.length; si++) {
     if (my !== runToken) return;
-    await ui.cap(s);
-    await sleep(2100);
-    ui.capHide();
-    await sleep(700);
+    shadow.setLine(si, film.story[si]);
+    await sleep(4300);                    // 每句:皮影场景推进 + 银幕内逐字
   }
+  screen.stopShadow();
+  await sleep(400);
 
   // 幕循环
   for (let i = 0; i < film.acts.length; i++) {

@@ -40,9 +40,13 @@ export class House {
       p.torsoMat.emissiveIntensity = 0;
       p.setNum(nums[i]);
       p.setColor(pick(COLORS));
+      p.setHero(false);
       if (p.numMesh) p.numMesh.material.opacity = 0.8;
     });
-    if (playerSeat != null && playerColor) this.puppets[playerSeat].setColor(playerColor);
+    if (playerSeat != null) {
+      if (playerColor) this.puppets[playerSeat].setColor(playerColor);
+      this.puppets[playerSeat].setHero(true);   // 主角金色轮廓光
+    }
   }
 
   get(i) { return this.puppets[i]; }

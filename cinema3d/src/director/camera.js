@@ -1,6 +1,6 @@
 // 三态镜头导演:AUTO(轨道运镜)/ FP(我的座位第一人称)/ FORCED(轮到你了)
 import * as THREE from 'three';
-import { SHOTS, AUTO_ROTATION } from './shots.js';
+import { SHOTS, HOME_SHOT } from './shots.js';
 import { seatWorldPos } from '../theater/hall.js';
 
 const FOV_AUTO = 40, FOV_FP = 65;
@@ -13,8 +13,7 @@ export class Director {
     this.enabled = true;         // 选座等接管镜头时置 false
     this.t = 0;
 
-    // AUTO 状态
-    this._rotIdx = 0;
+    // AUTO 状态:godView 常驻,插队镜头播完自动回位
     this._shot = null;
     this._shotT = 0;
 
@@ -49,7 +48,7 @@ export class Director {
   attachSeat(i) { this.seat = i; }
 
   _nextShot(name, opts) {
-    const key = name || AUTO_ROTATION[this._rotIdx++ % AUTO_ROTATION.length];
+    const key = name || HOME_SHOT;
     this._shot = SHOTS[key](opts || {});
     this._shotT = 0;
   }
@@ -133,8 +132,8 @@ export class Director {
     if (this.mode === 'AUTO') {
       this._shotT += dt;
       const k = Math.min(this._shotT / this._shot.dur, 1);
-      this._shot.at(k, this._tmpPos, this._tmpLook);
-      if (k >= 1) this._nextShot();
+      this._shot.at(k, this._tmpPos, this._tmpLook, this.t);
+      if (k >= 1) { this._beginTransition(1.6); this._nextShot(); }  // 插队镜头播完 → 平滑回 godView
     } else {
       this._fpPose(this._tmpPos, this._tmpLook);
     }

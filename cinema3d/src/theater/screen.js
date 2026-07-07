@@ -74,17 +74,19 @@ export class Screen {
     this._loader = new THREE.TextureLoader();
     this._fade = { from: 0, to: 0, t: 1, dur: 1 };
 
-    // 血字面片(银幕下沿,canvas 纹理)
+    this._shadow = null;   // 皮影戏接管时非空
+
+    // 血字面片(银幕下沿,canvas 纹理,支持两行)
     const c = document.createElement('canvas');
-    c.width = 1024; c.height = 224;
+    c.width = 1024; c.height = 320;
     this._txtCanvas = c;
     this._txtTex = new THREE.CanvasTexture(c);
     this._txtTex.colorSpace = THREE.SRGBColorSpace;
     this._txtMesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(7.2, 7.2 * 224 / 1024),
+      new THREE.PlaneGeometry(7.2, 7.2 * 320 / 1024),
       new THREE.MeshBasicMaterial({ map: this._txtTex, transparent: true, opacity: 0, depthWrite: false })
     );
-    this._txtMesh.position.set(0, LAYOUT.SCREEN_Y - 1.15, LAYOUT.SCREEN_Z + 0.06);
+    this._txtMesh.position.set(0, LAYOUT.SCREEN_Y - 0.95, LAYOUT.SCREEN_Z + 0.06);
     scene.add(this._txtMesh);
   }
 
@@ -122,19 +124,40 @@ export class Screen {
     setTimeout(() => { this.uniforms.uFlick.value = 0; }, ms);
   }
 
-  // 银幕血字(楷体,逐渐显现)
-  bloodText(text, { size = 92 } = {}) {
+  // 银幕血字(楷体,自适应字号,最多两行)
+  bloodText(text) {
     const x = this._txtCanvas.getContext('2d');
-    x.clearRect(0, 0, 1024, 224);
+    x.clearRect(0, 0, 1024, 320);
+    // 拆两行:超 12 字在标点或中点断行
+    let lines = [text];
+    if (text.length > 12) {
+      let cut = -1;
+      for (let i = Math.min(text.length - 2, 16); i >= 6; i--)
+        if ('。,,、?…'.includes(text[i])) { cut = i + 1; break; }
+      if (cut < 0) cut = Math.ceil(text.length / 2);
+      lines = [text.slice(0, cut), text.slice(cut)];
+    }
+    const size = Math.min(88, Math.floor(940 / Math.max(...lines.map(l => l.length))));
     x.font = `700 ${size}px "KaiTi","STKaiti","楷体",serif`;
     x.textAlign = 'center'; x.textBaseline = 'middle';
     x.shadowColor = 'rgba(180,31,23,.9)'; x.shadowBlur = 26;
     x.fillStyle = '#c8291e';
-    x.fillText(text, 512, 118);
+    const lh = size * 1.35, y0 = 160 - (lines.length - 1) * lh / 2;
+    lines.forEach((l, i) => x.fillText(l, 512, y0 + i * lh));
     this._txtTex.needsUpdate = true;
     this._txtMesh.material.opacity = 0;
     this._txtShow = true;
   }
+
+  // 皮影戏接管银幕(序章剧情)
+  startShadow(show) {
+    this._shadow = show;
+    this.uniforms.map.value = show.texture;
+    this.uniforms.uBoost.value = 1.0;
+    this.avgColor.set(0x74807c);
+    this._fadeTo(0.95, 1.2);
+  }
+  stopShadow() { this._shadow = null; }
 
   clearText() { this._txtShow = false; }
 
@@ -165,6 +188,7 @@ export class Screen {
 
   update(dt) {
     this.uniforms.uTime.value += dt;
+    if (this._shadow) this._shadow.update(dt);
     if (this._fade.t < 1) {
       this._fade.t = Math.min(this._fade.t + dt / this._fade.dur, 1);
       const k = this._fade.t * this._fade.t * (3 - 2 * this._fade.t);

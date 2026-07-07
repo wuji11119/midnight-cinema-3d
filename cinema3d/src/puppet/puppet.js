@@ -65,17 +65,30 @@ const GEO = {
 };
 
 const darkMat = new THREE.MeshStandardMaterial({
-  color: 0x141418, roughness: 0.85, side: THREE.DoubleSide,
-  emissive: 0x0a0e12, emissiveIntensity: 0.55,
+  color: 0x23232e, roughness: 0.85, side: THREE.DoubleSide,
+  emissive: 0x141a22, emissiveIntensity: 0.85,
 });
 const shadowMat = new THREE.MeshBasicMaterial({
   color: 0x000000, transparent: true, opacity: 0.5, depthWrite: false,
 });
 // 全偶共享的背光 rim 材质(加色混合:黑底上呈亮边)
 const haloMat = new THREE.MeshBasicMaterial({
-  color: 0x36474e, transparent: true, opacity: 0.42,
+  color: 0x4a5e66, transparent: true, opacity: 0.62,
   blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide,
 });
+
+// 主角轮廓光:完整放大剪影背板(金色,呼吸脉动)—— 上帝视角一眼锁定"你"
+function heroGeometry() {
+  const parts = [];
+  const head = new THREE.CircleGeometry(0.19, 26);
+  head.translate(0, 0.74, -0.03);
+  parts.push(head);
+  const body = roundedPlate(0.5, 0.66, 0.13);
+  body.translate(0, 0.34, -0.036);
+  parts.push(body);
+  return mergeGeoms(parts);
+}
+let heroGeo = null;
 
 // 编号 atlas:1..30 排 6×5(所有编号面片共享一张纹理)
 let numAtlas = null;
@@ -114,7 +127,7 @@ export class Puppet {
     this.halo = new THREE.Mesh(GEO.halo, haloMat);
     this.torsoMat = new THREE.MeshStandardMaterial({
       color: 0x6b2226, roughness: 0.9, side: THREE.DoubleSide,
-      emissive: 0x6b2226, emissiveIntensity: 0.22,
+      emissive: 0x6b2226, emissiveIntensity: 0.34,
     });
     this.torso = new THREE.Mesh(GEO.torso, this.torsoMat);
     this.torso.position.z = 0.004;
@@ -125,6 +138,7 @@ export class Puppet {
     this.shadow.scale.set(1, 0.7, 1);
 
     this.numMesh = null;   // setNum 时创建(需要 UV 指格)
+    this.heroMesh = null;  // setHero 时创建(主角轮廓光)
 
     this.group.add(this.dark, this.halo, this.torso, this.shadow);
 
@@ -166,7 +180,21 @@ export class Puppet {
   setMark(on) {
     this._mark = on;
     if (on) { this.torsoMat.emissive.setHex(0xb8433a); }
-    else { this.torsoMat.emissive.setHex(CLOTH_HEX[this.color] ?? 0x333333); this.torsoMat.emissiveIntensity = 0.22; }
+    else { this.torsoMat.emissive.setHex(CLOTH_HEX[this.color] ?? 0x333333); this.torsoMat.emissiveIntensity = 0.34; }
+  }
+
+  // 主角标识:金色轮廓光背板(呼吸脉动)
+  setHero(on) {
+    if (on && !this.heroMesh) {
+      if (!heroGeo) heroGeo = heroGeometry();
+      this.heroMesh = new THREE.Mesh(heroGeo, new THREE.MeshBasicMaterial({
+        color: 0xc8a44a, transparent: true, opacity: 0.5,
+        blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide,
+      }));
+      this.group.add(this.heroMesh);
+    }
+    if (this.heroMesh) this.heroMesh.visible = on;
+    this._hero = on;
   }
   shiver(dur = 1.0) { this._shiverT = dur; }
   stand(on) { this._stand = on ? 1 : 0; }
@@ -234,6 +262,11 @@ export class Puppet {
     // mark 红光脉动
     if (this._mark) {
       this.torsoMat.emissiveIntensity = 0.55 + 0.4 * Math.sin(t * 6);
+    }
+
+    // 主角轮廓光呼吸
+    if (this._hero && this.heroMesh?.visible) {
+      this.heroMesh.material.opacity = 0.4 + 0.18 * Math.sin(t * 2.2);
     }
 
     // 编号:轻浮动 + 近距离淡出(FP 怼脸时不糊屏)
