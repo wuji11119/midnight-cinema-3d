@@ -65,6 +65,7 @@ export class Director {
     this.mode = 'FP';
     this._beginTransition(1.2);
     this._setVig(false);
+    this.onModeChange?.(this.mode);
   }
 
   toAuto() {
@@ -72,6 +73,7 @@ export class Director {
     this._beginTransition(1.2);
     this._setVig(false);
     this._nextShot();
+    this.onModeChange?.(this.mode);
   }
 
   // 轮到你了:黑帧快切 + 收缩视野;resolve 于黑帧结束
@@ -85,6 +87,7 @@ export class Director {
     this._trans = null;          // 瞬切,无插值
     this._setVig(true);
     bo.style.opacity = 0;
+    this.onModeChange?.(this.mode);
   }
 
   release() {
@@ -92,6 +95,7 @@ export class Director {
     this._setVig(false);
     this.mode = this._forcedPrev === 'FP' ? 'FP' : 'AUTO';
     if (this.mode === 'AUTO') { this._beginTransition(1.4); this._nextShot(); }
+    this.onModeChange?.(this.mode);
   }
 
   _setVig(tight) {

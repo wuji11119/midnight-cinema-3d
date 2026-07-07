@@ -38,6 +38,15 @@ const mist = new Mist(scene);
 const director = new Director(camera);
 const input = new Input(renderer, camera, director);
 
+// 第一人称时隐藏"我"的纸偶 —— 眼位就在自己偶的头顶,billboard 会把
+// 金圈背板转向镜头,不隐藏则满屏都是自己的侧面色块(实测踩坑);事件驱动即切即隐
+director.onModeChange = mode => {
+  const me = house.playerPuppet();
+  if (!me) return;
+  const inFP = mode === 'FP' || mode === 'FORCED';
+  me.group.visible = me.alive ? !inFP : false;
+};
+
 const ctx = { house, director, screen, lights, mist, sfx, ui, input, mode: 'watch', run: null };
 
 addEventListener('resize', () => {
@@ -52,6 +61,11 @@ renderer.setAnimationLoop(() => {
   const t = clock.elapsedTime;
   fpsSample(dt);
   director.update(dt);
+
+  // 兜底:死亡后的"我"保持不可见(主隐藏逻辑走 onModeChange 事件)
+  const me = house.playerPuppet();
+  if (me && !me.alive) me.group.visible = false;
+
   screen.update(dt);
   lights.update(dt, screen.avgColor);
   house.update(dt, t, camera.position);
