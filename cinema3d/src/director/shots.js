@@ -66,13 +66,13 @@ export const SHOTS = {
     },
   }),
 
-  // 回看全场:从银幕的位置审视观众(点名 / 规则宣布)—— 阶梯厅从银幕上方俯扫
+  // 荧幕视角:贴着银幕面回看全场(点名 / 规则宣布 / 死亡)—— 全景,不入观众席
   houseFront: () => ({
     dur: 8,
     at(k, pos, look) {
       const e = ease(k);
-      pos.set((0.5 - e) * 2.4, 3.6, L.SCREEN_Z + 1.6);
-      look.set(0, 1.6, -3.6);
+      pos.set((0.5 - e) * 1.2, 4.6, L.SCREEN_Z + 0.9);
+      look.set(0, 1.9, -3.0);
     },
   }),
 

@@ -47,6 +47,7 @@ export async function playFilm(ctx, filmId, { mode, playerSeat }) {
     await sleep(4300);                    // 每句:皮影场景推进 + 银幕内逐字
   }
   screen.stopShadow();
+  screen.hide(0.9);      // 布光熄灭:不让皮影戏最后一帧滞留到幕间(用户反馈)
   await sleep(400);
 
   // 幕循环

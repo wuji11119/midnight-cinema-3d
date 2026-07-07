@@ -60,7 +60,8 @@ export class ShadowShow {
         if (this.nurseSit > 0.8) this.bedOccupied[3] = false;
       }
       if (this.line >= 4) {
-        this.fadeSan = Math.min(1, this.fadeSan + dt * 0.5);
+        // 「后来这里改成电影院」:灯全灭,布光渐熄 —— 不再画"影院自指"元画面(用户反馈:与内容不符)
+        this.fadeSan = Math.min(1, this.fadeSan + dt * 0.32);
         this.lampsOn = 0;
       }
     }
@@ -162,13 +163,12 @@ export class ShadowShow {
   // 疗养院皮影场景
   drawStory() {
     const x = this.x;
-    const sanAlpha = 1 - this.fadeSan;
+    const sanAlpha = 1;
     const floorY = 452;
 
     if (sanAlpha > 0) {
       x.save();
       x.globalAlpha = sanAlpha;
-      x.translate(0, this.fadeSan * 60);
 
       // 窗(黑框剪影 + 窗外飘雪的暗点)
       x.save();
@@ -252,22 +252,13 @@ export class ShadowShow {
       x.restore();
     }
 
-    // 结尾:影院浮现(黑边小银幕自指 + 椅背观众剪影排)
+    // 结尾:布光渐熄(放映灯慢慢暗下去,只留文字)
     if (this.fadeSan > 0) {
       const x2 = this.x;
       x2.save();
-      x2.globalAlpha = this.fadeSan;
-      x2.fillStyle = INK;
-      x2.fillRect(W / 2 - 204, 88, 408, 214);                  // 小银幕黑框
-      x2.fillStyle = '#f2ecd8';
-      x2.fillRect(W / 2 - 190, 100, 380, 190);                 // 亮银幕
-      x2.fillStyle = INK;
-      for (let r = 0; r < 2; r++)
-        for (let i = 0; i < 8; i++) {
-          const cx = 120 + i * 112 + r * 56, cy = 408 + r * 78;
-          x2.beginPath(); x2.arc(cx, cy - 26, 17, 0, 7); x2.fill();
-          x2.fillRect(cx - 36, cy - 11, 72, 56);
-        }
+      x2.globalAlpha = this.fadeSan * 0.88;
+      x2.fillStyle = '#08070a';
+      x2.fillRect(0, 0, W, H - 96);   // 留出底部文字带
       x2.restore();
     }
   }

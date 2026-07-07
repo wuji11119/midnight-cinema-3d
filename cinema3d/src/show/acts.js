@@ -49,7 +49,9 @@ export async function killSeq(ctx, victims, gap = 420) {
     setTimeout(() => {
       if (!p.alive) return;
       const pos = p.group.position.clone();
-      if (i === 0) director.requestShot('seatClose', { seatPos: pos });   // 每波死亡只切一次近景,看完自动回上帝视角
+      // 死亡镜头 = 荧幕视角(从银幕回看观众席,黑雾卷人全景可见);
+      // 旁观镜头只在上帝视角/荧幕视角之间切换,不再贴脸席位(用户反馈:近景穿模只见侧面)
+      if (i === 0) director.requestShot('houseFront');
       lights.deathLight(pos);
       sfx.whooshAt(pos);
       mist.burst(pos).then(() => p.devour());
