@@ -97,9 +97,10 @@ export class Director {
     const f = (this._keys.has('KeyW') || this._keys.has('ArrowUp') ? 1 : 0) - (this._keys.has('KeyS') || this._keys.has('ArrowDown') ? 1 : 0);
     const s = (this._keys.has('KeyD') || this._keys.has('ArrowRight') ? 1 : 0) - (this._keys.has('KeyA') || this._keys.has('ArrowLeft') ? 1 : 0);
     if (f || s) {
+      // 右向量 = (-fz, fx)(2026-07-14 用户实测 A/D 反向:此前误写为 (fz,-fx))
       const inv = 1 / Math.hypot(f || 0.0001, s || 0.0001);
-      mx = (f * fx + s * fz) * inv;
-      mz = (f * fz - s * fx) * inv;
+      mx = (f * fx - s * fz) * inv;
+      mz = (f * fz + s * fx) * inv;
       const step = WALK.SPEED * dt;
       this.walkPos.x += mx * step;
       this.walkPos.z += mz * step;
