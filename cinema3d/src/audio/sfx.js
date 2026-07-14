@@ -128,6 +128,12 @@ export class Sfx {
   // FORCED 切入:高频耳鸣一声
   earRing() { this.env(3200, 2900, 1.6, 0.03, 'sine'); }
 
+  // 脚步:地毯上的闷响(随机微变)
+  step() {
+    const f = 74 + Math.random() * 22;
+    this.env(f, f * 0.55, 0.09, 0.16);
+  }
+
   // 死亡瞬间抽真空:全场 0.2s 静默再恢复
   vacuum() {
     if (!this.ready) return;

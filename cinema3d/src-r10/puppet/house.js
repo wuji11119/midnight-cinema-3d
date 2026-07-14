@@ -22,8 +22,17 @@ export class House {
   }
 
   // 每场开演前:重置 + 发座号(1..30 洗牌)+ 发衣色
-  assign({ playerSeat = null, playerColor = null } = {}) {
+  // emptyCount>0:随机留空座(走动选座模式 —— 你是最后入场的那个)
+  assign({ playerSeat = null, playerColor = null, emptyCount = 0 } = {}) {
     this.playerSeat = playerSeat;
+    this.emptySeats = new Set();
+    if (emptyCount > 0) {
+      // 空座只留在靠过道的四列(col 0/1/4/5)—— 中间列从过道够不着 E 交互
+      const pool = Array.from({ length: this.puppets.length }, (_, i) => i)
+        .filter(i => i !== playerSeat && [0, 1, 4, 5].includes(i % LAYOUT.COLS))
+        .sort(() => Math.random() - 0.5);
+      for (const i of pool.slice(0, emptyCount)) this.emptySeats.add(i);
+    }
     const nums = Array.from({ length: this.puppets.length }, (_, i) => i + 1)
       .sort(() => Math.random() - 0.5);
     const v = new THREE.Vector3();
@@ -42,11 +51,26 @@ export class House {
       p.setColor(pick(COLORS));
       p.setHero(false);
       if (p.numMesh) p.numMesh.material.opacity = 0.8;
+      if (this.emptySeats.has(i)) {           // 空座:无人,不参与判定
+        p.alive = false;
+        p.group.visible = false;
+      }
     });
     if (playerSeat != null) {
       if (playerColor) this.puppets[playerSeat].setColor(playerColor);
       this.puppets[playerSeat].setHero(true);   // 主角金色轮廓光
     }
+  }
+
+  // 走动选座后认领空座:该偶复活为"你"
+  claimSeat(i) {
+    const p = this.puppets[i];
+    this.playerSeat = i;
+    this.emptySeats?.delete(i);
+    p.alive = true;
+    p._dead = false;
+    p.setHero(true);
+    return p;
   }
 
   get(i) { return this.puppets[i]; }

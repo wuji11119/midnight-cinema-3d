@@ -118,15 +118,23 @@ async function start(mode) {
   if (started) return;
   started = true;
   sfx.init(camera, scene);
+  director.onStep = () => sfx.step();
   ui.gateHide();
   await Promise.all([mist.ready, preloading]);
-  let playerSeat;
+  let playerSeat, preAssigned = false;
   if (mode === 'play') {
-    playerSeat = await input.pickSeat(scene, hall.seats);
+    // 第一人称走动入场:观众已坐定,你从银幕侧前门进来,找空座坐下
+    house.assign({ playerSeat: null, emptyCount: 5 });
+    director.enterWalk();
+    playerSeat = await input.walkPickSeat(scene, house);
+    house.claimSeat(playerSeat);
+    director.sitDown(playerSeat);
+    preAssigned = true;
+    await new Promise(r => setTimeout(r, 1200));   // 落座过渡
   } else {
     playerSeat = Math.floor(Math.random() * LAYOUT.ROWS * LAYOUT.COLS);
   }
-  await playFilm(ctx, 'silent-ward', { mode, playerSeat });
+  await playFilm(ctx, 'silent-ward', { mode, playerSeat, preAssigned });
   ui.gateShow();   // 散场回入场页,可换模式再来
   started = false;
 }

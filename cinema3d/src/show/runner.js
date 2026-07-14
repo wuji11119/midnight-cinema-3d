@@ -7,15 +7,19 @@ import { ShadowShow } from '../theater/shadowshow.js';
 
 let runToken = 0;
 
-export async function playFilm(ctx, filmId, { mode, playerSeat }) {
+export async function playFilm(ctx, filmId, { mode, playerSeat, preAssigned = false }) {
   const my = ++runToken;
   const film = FILMS[filmId];
   const { house, screen, lights, director, sfx } = ctx;
 
-  // 复位与分配
-  house.assign({ playerSeat });
-  director.attachSeat(playerSeat);
-  director.toAuto();
+  // 复位与分配(走动选座模式已在场外 assign+claim,不重洗)
+  if (!preAssigned) {
+    house.assign({ playerSeat });
+    director.attachSeat(playerSeat);
+  }
+  // play=第一人称开演(代入感);watch=上帝视角
+  if (mode === 'play') { if (director.mode !== 'FP') director.toFP(); }
+  else director.toAuto();
   ui.deadBanner(false);
   lights.dim(1);
   ctx.mode = mode;

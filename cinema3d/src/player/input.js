@@ -49,6 +49,51 @@ export class Input {
     });
   }
 
+  // 走动选座:靠近空座(≤2.0m)亮红罩,按 E 入座;100ms 轮询不依赖 rAF
+  walkPickSeat(scene, house) {
+    return new Promise(res => {
+      const hl = new THREE.Mesh(
+        new THREE.BoxGeometry(0.72, 0.95, 0.66),
+        new THREE.MeshBasicMaterial({ color: 0xb8433a, transparent: true, opacity: 0.34, depthWrite: false })
+      );
+      hl.visible = false;
+      scene.add(hl);
+      const v = new THREE.Vector3();
+      let near = -1;
+      const tick = setInterval(() => {
+        const wp = this.director.walkPos;
+        let best = -1, bestD = 2.6 * 2.6;
+        for (const i of house.emptySeats || []) {
+          seatWorldPos(i, v);
+          const d = (v.x - wp.x) ** 2 + (v.z - wp.z) ** 2;
+          if (d < bestD) { bestD = d; best = i; }
+        }
+        if (best !== near) {
+          near = best;
+          if (near >= 0) {
+            seatWorldPos(near, v);
+            hl.position.set(v.x, v.y - 0.05, v.z + 0.05);
+            hl.visible = true;
+            ui.holdHint('E · 在这里坐下');
+          } else {
+            hl.visible = false;
+            ui.holdHint('W A S D · 走动　鼠标 · 环顾 —— 找一个空座');
+          }
+        }
+      }, 100);
+      const onKey = e => {
+        if (e.code !== 'KeyE' || near < 0) return;
+        clearInterval(tick);
+        removeEventListener('keydown', onKey);
+        scene.remove(hl);
+        ui.holdHint(null);
+        res(near);
+      };
+      addEventListener('keydown', onKey);
+      ui.holdHint('W A S D · 走动　鼠标 · 环顾 —— 找一个空座');
+    });
+  }
+
   // 俯瞰选座:hover 高亮,点击空座落座
   pickSeat(scene, seats) {
     return new Promise(res => {
