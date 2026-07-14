@@ -111,11 +111,9 @@ export const ACTS = {
     const was = await forceIfInvolved(ctx, me?.alive);
     let playerFail = false;
     if (mode === 'play' && me?.alive) {
-      ui.holdHint('按住 空格 屏息 —— 直到她走过去');
-      sfx.holdMuffle(true);
+      // 提示 / 闭气反馈 / 声音闷罐全部由 holdWindow 内部管理
       const r = await input.holdWindow(4600);
       playerFail = !r.ok;
-      sfx.holdMuffle(false);
       ui.holdHint(null);
     } else {
       await ui.countdownBeat(4200);

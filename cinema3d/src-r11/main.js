@@ -132,7 +132,8 @@ async function start(mode) {
     preAssigned = true;
     await new Promise(r => setTimeout(r, 1200));   // 落座过渡
   } else {
-    playerSeat = Math.floor(Math.random() * LAYOUT.ROWS * LAYOUT.COLS);
+    // watch 的"你"也放最后两排(镜头切入时不怼银幕)
+    playerSeat = Math.floor(Math.random() * LAYOUT.COLS * 2);
   }
   await playFilm(ctx, 'silent-ward', { mode, playerSeat, preAssigned });
   ui.gateShow();   // 散场回入场页,可换模式再来

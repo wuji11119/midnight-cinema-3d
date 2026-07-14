@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { SHOTS, HOME_SHOT } from './shots.js';
 import { seatWorldPos } from '../theater/hall.js';
 
-const FOV_AUTO = 40, FOV_FP = 65, FOV_WALK = 68;
+const FOV_AUTO = 40, FOV_FP = 58, FOV_WALK = 66;
 
 // 行走参数:边界 / 座位区阻挡 / 台阶坡(与 hall LAYOUT 坡向一致:前排低后排高)
 const WALK = {
@@ -50,9 +50,10 @@ export class Director {
     this._forcedPrev = null;
 
     addEventListener('pointermove', e => {
-      // 绝对映射:屏幕位置 → 目标视角(演出版无需 pointer lock);走动时放宽转角
-      const maxYaw = this.mode === 'WALK' ? 165 : 75;
-      const maxPitch = this.mode === 'WALK' ? 42 : 35;
+      // 绝对映射:屏幕位置 → 目标视角(演出版无需 pointer lock)
+      // 灵敏度收敛(2026-07-14 用户反馈"过于灵敏"):转角减档,配合更重的阻尼
+      const maxYaw = this.mode === 'WALK' ? 110 : 58;
+      const maxPitch = this.mode === 'WALK' ? 36 : 30;
       this._yawT = -(e.clientX / innerWidth - 0.5) * 2 * THREE.MathUtils.degToRad(maxYaw);
       this._pitchT = -(e.clientY / innerHeight - 0.5) * 2 * THREE.MathUtils.degToRad(maxPitch);
     });
@@ -71,10 +72,10 @@ export class Director {
 
   attachSeat(i) { this.seat = i; }
 
-  // 走动入场:从银幕侧前门进场,面向观众席
+  // 走动入场:后场中央高台进场(影厅中轴最高点),面向银幕全景走下去
   enterWalk() {
     this.mode = 'WALK';
-    this.walkPos.set(0.9, 0, -7.05);
+    this.walkPos.set(0, 0, 3.9);
     this._trans = null;
     this._setVig(false);
     this.onModeChange?.(this.mode);
@@ -88,9 +89,9 @@ export class Director {
     this.onModeChange?.(this.mode);
   }
 
-  // 行走位姿(baseYaw=π:进场默认面向观众席 +z)
+  // 行走位姿(baseYaw=0:后场进场,默认面向银幕 -z)
   _walkPose(dt, pos, look) {
-    const yaw = Math.PI + this._yaw, pitch = this._pitch;
+    const yaw = this._yaw, pitch = this._pitch;
     const fx = Math.sin(yaw), fz = -Math.cos(yaw);
     let mx = 0, mz = 0;
     const f = (this._keys.has('KeyW') || this._keys.has('ArrowUp') ? 1 : 0) - (this._keys.has('KeyS') || this._keys.has('ArrowDown') ? 1 : 0);
@@ -211,9 +212,9 @@ export class Director {
     if (!this.enabled) return;
     this.t += dt;
 
-    // FP 视角阻尼
-    this._yaw += (this._yawT - this._yaw) * Math.min(dt * 4, 1);
-    this._pitch += (this._pitchT - this._pitch) * Math.min(dt * 4, 1);
+    // FP 视角阻尼(重阻尼:抵消绝对映射的"甩头"感)
+    this._yaw += (this._yawT - this._yaw) * Math.min(dt * 2.6, 1);
+    this._pitch += (this._pitchT - this._pitch) * Math.min(dt * 2.6, 1);
 
     // 目标位姿
     if (this.mode === 'AUTO') {

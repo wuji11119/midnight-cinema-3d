@@ -27,9 +27,11 @@ export class House {
     this.playerSeat = playerSeat;
     this.emptySeats = new Set();
     if (emptyCount > 0) {
-      // 空座只留在靠过道的四列(col 0/1/4/5)—— 中间列从过道够不着 E 交互
+      // 空座只留最后两排 × 靠过道四列:E 交互够得着,且入座后距银幕 6m+ 不怼脸
       const pool = Array.from({ length: this.puppets.length }, (_, i) => i)
-        .filter(i => i !== playerSeat && [0, 1, 4, 5].includes(i % LAYOUT.COLS))
+        .filter(i => i !== playerSeat
+          && Math.floor(i / LAYOUT.COLS) <= 1
+          && [0, 1, 4, 5].includes(i % LAYOUT.COLS))
         .sort(() => Math.random() - 0.5);
       for (const i of pool.slice(0, emptyCount)) this.emptySeats.add(i);
     }

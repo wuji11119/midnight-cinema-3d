@@ -83,6 +83,14 @@ export function buildHall(scene) {
   floor.position.z = -3;
   group.add(floor);
 
+  // 后场入口高台:与最后排(row0)同高,玩家从这里走进影厅
+  const backDeck = new THREE.Mesh(new THREE.BoxGeometry(L.HALL_W - 2.2, L.seatY(0), 6.4), matStep);
+  backDeck.position.set(0, L.seatY(0) / 2, 1.75);
+  group.add(backDeck);
+  const deckTrim = new THREE.Mesh(new THREE.BoxGeometry(L.HALL_W - 2.2, 0.02, 0.05), matTrim);
+  deckTrim.position.set(0, L.seatY(0) + 0.01, -1.43);
+  group.add(deckTrim);
+
   // 台阶(凡被垫高的排一块,前排贴地无台阶)
   for (let row = 0; row < L.ROWS; row++) {
     const h = L.seatY(row);

@@ -3,6 +3,7 @@
 import * as THREE from 'three';
 import { seatWorldPos, LAYOUT } from '../theater/hall.js';
 import { ui } from './ui.js';
+import { sfx } from '../audio/sfx.js';
 
 export class Input {
   constructor(renderer, camera, director) {
@@ -11,32 +12,47 @@ export class Input {
     this.director = director;
   }
 
-  // 屏息:窗口开启后 1200ms 内按下(空格/触屏),按住到剩 500ms 宽限点,期间松手即败
+  // 屏息:窗口前 55% 内按下(空格/触屏)并按住到窗口结束(留 350ms 宽限),松手即败
+  // 全程状态反馈(2026-07-14 用户反馈"不知道自己按没按住"):
+  // 按下 → 「屏住了」提示 + 闭气压迫暗罩 + 声音闷罐;松早 → 「她听见了」;超时未按 → 同样明示
   holdWindow(ms) {
     return new Promise(res => {
       const t0 = performance.now();
-      let downAt = null, failed = false, done = false;
-      const ok = () => downAt != null && !failed;
+      let holding = false, blew = false, done = false;
+      const bo = document.getElementById('blackout');
+      const setHoldFx = on => {
+        bo.style.transition = 'opacity .35s';
+        bo.style.opacity = on ? 0.22 : 0;
+        sfx.holdMuffle(on);
+      };
       const down = e => {
-        if (e.type === 'keydown' && e.code !== 'Space') return;
-        if (e.repeat) return;
+        if ((e.type === 'keydown' && e.code !== 'Space') || e.repeat || done || blew) return;
+        if (holding) return;
         const t = performance.now() - t0;
-        if (downAt == null) {
-          if (t > 1200) failed = true;   // 按太晚
-          downAt = t;
+        if (t <= ms * 0.55) {
+          holding = true;
+          setHoldFx(true);
+          ui.holdHint('屏住了……别松,直到她走过去');
+        } else {
+          blew = true;   // 反应太慢,这口气没屏上
+          ui.holdHint('太迟了……呼吸声露出来了');
         }
       };
       const up = e => {
-        if (e.type === 'keyup' && e.code !== 'Space') return;
-        if (downAt == null || done) return;
+        if ((e.type === 'keyup' && e.code !== 'Space') || done || !holding) return;
         const t = performance.now() - t0;
-        if (t < ms - 500) failed = true;  // 松太早
+        if (t < ms - 350) {
+          holding = false;
+          blew = true;
+          setHoldFx(false);
+          ui.holdHint('松了……她听见了');
+        }
       };
       addEventListener('keydown', down);
       addEventListener('keyup', up);
       addEventListener('pointerdown', down);
       addEventListener('pointerup', up);
-      // 倒计时圈并行
+      ui.holdHint('她来了 —— 按住 空格,屏住呼吸');
       ui.countdownBeat(ms);
       setTimeout(() => {
         done = true;
@@ -44,7 +60,9 @@ export class Input {
         removeEventListener('keyup', up);
         removeEventListener('pointerdown', down);
         removeEventListener('pointerup', up);
-        res({ ok: ok() });
+        setHoldFx(false);
+        bo.style.transition = 'opacity .12s';
+        res({ ok: holding && !blew });
       }, ms);
     });
   }
