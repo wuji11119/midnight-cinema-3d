@@ -85,6 +85,14 @@
     font-size:14px;letter-spacing:.3em;opacity:0;transition:opacity .4s;pointer-events:none;
     text-shadow:0 0 14px rgba(0,0,0,.9)}
   #holdHint.show{opacity:.9}
+  /* 我的状态卡(座号 + 衣色):你永远知道自己是谁 */
+  #meCard{position:fixed;left:18px;bottom:16px;z-index:13;display:none;align-items:center;gap:10px;
+    background:rgba(8,7,10,.72);border:1px solid #2a2434;padding:8px 14px;pointer-events:none;
+    color:#b8b2a4;font-size:13px;letter-spacing:.18em;transition:opacity .6s}
+  #meCard.show{display:flex}
+  #meCard.dead{opacity:.35}
+  #meCard .dot{width:13px;height:13px;border-radius:50%;border:1px solid rgba(216,205,182,.5);
+    box-shadow:0 0 8px rgba(0,0,0,.6) inset}
 </style>
 </head>
 <body>
@@ -101,6 +109,7 @@
     <circle class="fgc" cx="32" cy="32" r="27" stroke-dasharray="169.6" stroke-dashoffset="0"/>
   </svg></div>
   <div id="holdHint"></div>
+  <div id="meCard"><span class="dot"></span><span class="txt"></span></div>
 </div>
 <div id="choices"></div>
 <div id="settle">
@@ -122,7 +131,7 @@
   </div>
   <p id="loadTip" style="letter-spacing:.2em"></p>
   <p id="ctrlTip" style="letter-spacing:.15em;line-height:2">入座试玩:W A S D · 走进影厅　E · 入座　空格 · 屏息　　入座后 Tab · 切换视角</p>
-  <p id="buildVer" style="position:fixed;right:14px;bottom:10px;color:#3a352c;font-size:11px;letter-spacing:.15em">build r12 · 0714-2111 · 072525b</p>
+  <p id="buildVer" style="position:fixed;right:14px;bottom:10px;color:#3a352c;font-size:11px;letter-spacing:.15em">build r13 · 0715-1820 · 66b2b29</p>
 </div>
 <button id="mute" style="position:fixed;top:14px;right:16px;z-index:31;background:rgba(10,9,7,.7);border:1px solid #34291c;color:#9a8f76;font-size:15px;padding:5px 12px;cursor:pointer">🔊</button>
 <div id="flash" style="position:fixed;inset:0;z-index:39;background:#fff;opacity:0;pointer-events:none"></div>
@@ -135,6 +144,6 @@
   }
 }
 </script>
-<script type="module" src="./src-r12/main.js"></script>
+<script type="module" src="./src-r13/main.js"></script>
 </body>
 </html>

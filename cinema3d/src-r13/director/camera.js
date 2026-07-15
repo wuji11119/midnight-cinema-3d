@@ -197,7 +197,8 @@ export class Director {
 
   _fpPose(pos, look) {
     seatWorldPos(this.seat, pos);
-    pos.y += 0.88;   // 眼高:略高于前排头顶(排差 0.18 保证后排能越过前排看银幕)
+    pos.x += this.fpLean || 0;   // 选边幕:身体真的向选的那边倾
+    pos.y += 0.88;   // 眼高:略高于前排头顶(排差保证后排能越过前排看银幕)
     // 呼吸感微晃
     pos.y += Math.sin(this.t * 1.4) * 0.008;
     pos.x += Math.sin(this.t * 0.9) * 0.004;

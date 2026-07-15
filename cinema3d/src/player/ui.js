@@ -46,6 +46,17 @@ export const ui = {
 
   deadBanner(on) { $('#deadBanner').style.opacity = on ? 0.9 : 0; },
 
+  // 我的状态卡:座号 + 衣色(亮化色点,保证黑底可辨)
+  meCard(info) {
+    const el = $('#meCard');
+    if (!info) { el.classList.remove('show'); return; }
+    const BRIGHT = { 红: '#c8524a', 蓝: '#5a74c8', 黄: '#c8a44a', 绿: '#5a9a62', 白: '#cfd0c8', 黑: '#6a6a74', 紫: '#9a6ac8' };
+    el.querySelector('.dot').style.background = BRIGHT[info.color] || '#888';
+    el.querySelector('.txt').textContent = `${String(info.num).padStart(2, '0')} 号座 · 衣色 ${info.color}`;
+    el.classList.toggle('dead', !!info.dead);
+    el.classList.add('show');
+  },
+
   // 倒计时呼吸圈 + 末 4 拍心跳(theater countbeat 的视觉化)
   async countdownBeat(ms) {
     const ring = $('#countRing');

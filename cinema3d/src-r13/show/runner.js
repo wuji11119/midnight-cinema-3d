@@ -24,6 +24,10 @@ export async function playFilm(ctx, filmId, { mode, playerSeat, preAssigned = fa
   lights.dim(1);
   ctx.mode = mode;
 
+  // 我的状态卡:座号 + 衣色(color/final 幕的判定信息,你得知道自己是谁)
+  const meP = house.playerPuppet();
+  if (meP) ui.meCard({ num: meP.num, color: meP.color });
+
   // 本场规则量(theater L428-430:target ≠ 幕布色;target2 备用)
   const run = { curtain: pick(CURTAINS), step: 0 };
   run.target = pick(COLORS.filter(c => c !== run.curtain.c));
@@ -94,6 +98,7 @@ export async function playFilm(ctx, filmId, { mode, playerSeat, preAssigned = fa
   ui.capHide();
   ui.marquee(false);
   ui.deadBanner(false);
+  ui.meCard(null);
 
   await ui.settle({
     surviveLine: film.survive,

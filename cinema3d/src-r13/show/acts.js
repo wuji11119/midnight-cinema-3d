@@ -32,6 +32,7 @@ async function playerDeathFX(ctx) {
   director.release();
   director.toAuto();
   ui.deadBanner(true);
+  ui.meCard({ num: p.num, color: p.color, dead: true });
   bo.style.transition = 'opacity 2.2s';
   bo.style.opacity = 0;
   await sleep(1200);
@@ -58,6 +59,14 @@ export async function killSeq(ctx, victims, gap = 420) {
     }, i * gap);
   });
   await sleep(others.length * gap + 2100);
+}
+
+// 幕结算后的个人反馈:你活下来时,告诉你"为什么活"(交互闭环)
+async function passFeedback(ctx, text) {
+  if (ctx.mode !== 'play' || !ctx.house.isPlayerAlive()) return;
+  ui.holdHint(text);
+  await sleep(2000);
+  ui.holdHint(null);
 }
 
 // 本幕涉及"你" → 强制切入第一人称(轮到你了)
@@ -96,6 +105,7 @@ export const ACTS = {
     await killSeq(ctx, doomed, 420);
     house.puppets.forEach(p => p.setMark(false));
     releaseForced(ctx, was);
+    await passFeedback(ctx, `病危色是${run.target}。不是你的颜色。这一幕,你活着。`);
   },
 
   // 屏住呼吸(她查房):play 长按空格 ≥4s
@@ -128,6 +138,7 @@ export const ACTS = {
     lights.dim(1);
     sfx.rumble(false);
     releaseForced(ctx, was);
+    await passFeedback(ctx, '脚步声远了。她走过去了 —— 你屏住了。');
   },
 
   // 左右选边,人多边死(split_few 反转)
@@ -150,7 +161,10 @@ export const ACTS = {
         ui.choices([
           { label: '推出去', value: 'push' },
           { label: '闭眼祈祷', value: 'silent' },
-        ], { expire: 4200, confirmOnPick: true }),
+        ], { expire: 4200, confirmOnPick: true }).then(v => {
+          ui.holdHint(v === 'push' ? '你把他往走廊推了出去……' : '你闭上了眼,捂住耳朵。');
+          return v;
+        }),
         ui.countdownBeat(4200),
       ]);
       playerPush = choice === 'push';
@@ -178,6 +192,9 @@ export const ACTS = {
     house.puppets.forEach(p => p.lean(false));
     lights.dim(1);
     releaseForced(ctx, was);
+    await passFeedback(ctx, playerPush
+      ? '推出去的人,没有再回来。你的手还在抖。'
+      : '你什么都没听见。喘息声,自己停了。');
   },
 
   // 终幕:与开场幕布同色者死(考记忆)
@@ -199,6 +216,8 @@ export const ACTS = {
     const doomed = house.alive().filter(p => p.color === run.curtain.c);
     await killSeq(ctx, doomed, 480);
     releaseForced(ctx, was);
+    const meNow = house.playerPuppet();
+    await passFeedback(ctx, `幕布是${run.curtain.label}。你穿的是${meNow?.color ?? ''}色 —— 你可以走了。`);
   },
 };
 
@@ -219,6 +238,12 @@ async function splitCore(ctx, act, run, few) {
     ], { expire: 4200, confirmOnPick: false });
     await ui.countdownBeat(4200);
     playerSide = await sidePick;
+    if (playerSide) {
+      ui.holdHint(playerSide === 'L' ? '你把身子挪向了左边' : '你把身子挪向了右边');
+      director.fpLean = playerSide === 'L' ? -0.3 : 0.3;   // 视角真的倾过去
+    } else {
+      ui.holdHint('你没动。身子随人流晃向了一边');
+    }
   }
   ui.capHide();
   const sides = new Map();
@@ -243,5 +268,9 @@ async function splitCore(ctx, act, run, few) {
   if (nL !== nR) sides.forEach((s, p) => { if (s === dead) doomed.push(p); });
   await killSeq(ctx, doomed, 150);
   house.puppets.forEach(p => p.sideShift(0));
+  director.fpLean = 0;
   releaseForced(ctx, was);
+  await passFeedback(ctx, nL === nR
+    ? '两边一样多。它犹豫了很久,一个都没带走。'
+    : (few ? '它去了人少的那边。你混在人多的一侧。' : '你选的那边人少。另一边,整排都空了。'));
 }
